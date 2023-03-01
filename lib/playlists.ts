@@ -24,8 +24,12 @@ export async function getPlaylistData(accessToken: string): Promise<PlaylistData
 }
 
 export async function getPlaylist(accessToken: string, playlistId: string) {
-  const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`, {
-    headers: headers(accessToken)
+  const url = `https://api.spotify.com/v1/playlists/${playlistId}?` +
+    new URLSearchParams({
+      fields: "id,owner,name,tracks(items(track(id,artists(name),name)))",
+    })
+  const response = await fetch(url, {
+    headers: headers(accessToken),
   })
   return await response.json() as SpotifyApi.SinglePlaylistResponse
 }
