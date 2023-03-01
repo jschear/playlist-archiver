@@ -52,13 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           {playlist.owner.display_name && <Text style={styles.subtitle}>{playlist.owner.display_name}</Text>}
         </View>
         <View>
-          {/* eslint-disable react/jsx-key */}
           {playlist.tracks.items.map((item) =>
-            <Text style={styles.track}>
+            <Text key={playlist.id} style={styles.track}>
               {item.track.name} - {item.track.artists.map(artist => artist.name).join(", ")}
             </Text>
           )}
-          {/* eslint-enable react/jsx-key */}
         </View>
       </Page>
     </Document>
