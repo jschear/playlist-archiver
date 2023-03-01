@@ -2,26 +2,15 @@ import { useSession, signOut, signIn } from "next-auth/react"
 import { getToken } from "next-auth/jwt"
 import Head from "next/head"
 import styles from '@/styles/Home.module.css'
+import Link from "next/link"
+import { getPlaylistData, PlaylistData } from "@/lib/playlists"
 
-export default function Component({ playlistNames }) {
+export default function Component({ playlists }: PlaylistData) {
   const { data: session } = useSession()
 
-  var loginStatus;
-  if (session) {
-    loginStatus = <>
-      Signed in as {session.user.email} <br />
-      <button onClick={() => signOut()}>Sign out</button>
-    </>
-  } else {
-    loginStatus = <>
-      Not signed in <br />
-      <button onClick={() => signIn()}>Sign in</button>
-    </>
-  }
-
-  const listItems = playlistNames.map((name) =>
-    <li key={name}>
-      {name}
+  const listItems = playlists.map(playlist =>
+    <li key={playlist.id}>
+      <Link href={`/playlists/${playlist.id}`}>{playlist.name}</Link>
     </li>
   )
 
@@ -34,11 +23,19 @@ export default function Component({ playlistNames }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <div className={styles.description}>
-          Export your Spotify playlists!
-        </div>
+        <h2>Export your Spotify playlists!</h2>
+
         <ul>{listItems}</ul>
-        {loginStatus}
+
+        {session && <>
+          Signed in as {session.user.email} <br />
+          <button onClick={() => signOut()}>Sign out</button>
+        </>}
+
+        {!session && <>
+          Not signed in <br />
+          <button onClick={() => signIn()}>Sign in</button>
+        </>}
       </main>
     </>
   )
@@ -46,21 +43,8 @@ export default function Component({ playlistNames }) {
 
 export async function getServerSideProps({ req }) {
   const jwt = await getToken({ req })
-
-  // TODO: handle errors, pagination, etc.
-  const playlistResponse = await fetch("https://api.spotify.com/v1/me/playlists", {
-    headers: new Headers({
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + jwt.accessToken
-    })
-  })
-
-  const playlists = await playlistResponse.json()
-  const playlistNames = playlists["items"].map((playlist) => playlist["name"])
+  const playlistData = await getPlaylistData(jwt.accessToken as string)
   return {
-    props: {
-      playlistNames: playlistNames
-    }
+    props: playlistData
   }
 }
